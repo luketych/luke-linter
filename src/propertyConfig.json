@@ -1,0 +1,41 @@
+{
+    "properties": {
+        "author": {
+            "required": true,
+            "description": "The author of the code",
+            "severity": "error"
+        },
+        "description": {
+            "required": true,
+            "description": "A description of what the code does",
+            "severity": "error"
+        },
+        "params": {
+            "required": false,
+            "description": "Function parameters documentation",
+            "severity": "warning"
+        },
+        "returns": {
+            "required": false,
+            "description": "Function return value documentation",
+            "severity": "warning"
+        },
+        "example": {
+            "required": false,
+            "description": "Usage example",
+            "severity": "info"
+        }
+    },
+    "scopes": {
+        "file": [
+            "author",
+            "description"
+        ],
+        "function": [
+            "description",
+            "params",
+            "returns",
+            "example"
+        ]
+    }
+}

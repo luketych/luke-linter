@@ -1,0 +1,116 @@
+{
+    "name": "luke-linter",
+    "displayName": "Luke Linter",
+    "description": "A linter that enforces docstring properties defined at the top of functions and files.",
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "^1.86.0"
+    },
+    "categories": [
+        "Linters"
+    ],
+    "activationEvents": [
+        "onStartupFinished"
+    ],
+    "main": "./src/extension.js",
+    "contributes": {
+        "commands": [
+            {
+                "command": "lukeLinter.checkDocument",
+                "title": "Luke Linter: Check Current Document"
+            },
+            {
+                "command": "lukeLinter.checkWorkspace",
+                "title": "Luke Linter: Check Entire Workspace"
+            },
+            {
+                "command": "lukeLinter.addFileProperties",
+                "title": "Luke Linter: Add File Properties"
+            },
+            {
+                "command": "lukeLinter.addFunctionProperties",
+                "title": "Luke Linter: Add Function Properties"
+            },
+            {
+                "command": "lukeLinter.showPropertyConfig",
+                "title": "Luke Linter: Show Property Configuration"
+            },
+            {
+                "command": "lukeLinter.initProjectConfig",
+                "title": "Luke Linter: Initialize Project Configuration"
+            }
+        ],
+        "configuration": {
+            "title": "Luke Linter",
+            "properties": {
+                "lukeLinter.enableLinting": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable/disable property linting"
+                },
+                "lukeLinter.customProperties": {
+                    "type": "object",
+                    "default": {},
+                    "description": "Custom property definitions to extend the default ones",
+                    "additionalProperties": {
+                        "type": "object",
+                        "properties": {
+                            "required": {
+                                "type": "boolean"
+                            },
+                            "description": {
+                                "type": "string"
+                            },
+                            "severity": {
+                                "type": "string",
+                                "enum": [
+                                    "error",
+                                    "warning",
+                                    "info"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "lukeLinter.fileTypes": {
+                    "type": "array",
+                    "default": [
+                        ".js",
+                        ".ts",
+                        ".jsx",
+                        ".tsx",
+                        ".py"
+                    ],
+                    "description": "File types to enable linting for",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "lukeLinter.ignorePatterns": {
+                    "type": "array",
+                    "default": [
+                        "node_modules/**",
+                        "dist/**",
+                        "build/**"
+                    ],
+                    "description": "Patterns to ignore when linting",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    },
+    "scripts": {
+        "lint": "eslint .",
+        "pretest": "npm run lint",
+        "test": "node ./test/runTest.js"
+    },
+    "devDependencies": {
+        "@types/vscode": "^1.86.0",
+        "@types/mocha": "^10.0.6",
+        "@types/node": "18.x",
+        "eslint": "^8.56.0",
+        "typescript": "^5.3.3"
+    }
+}
