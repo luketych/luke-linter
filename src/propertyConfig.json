@@ -1,5 +1,10 @@
 {
     "properties": {
+        "masterFormula": {
+            "required": true,
+            "description": "The master formula for the code",
+            "severity": "error"
+        },
         "author": {
             "required": true,
             "description": "The author of the code",
@@ -28,10 +33,12 @@
     },
     "scopes": {
         "file": [
+            "masterFormula",
             "author",
             "description"
         ],
         "function": [
+            "masterFormula",
             "description",
             "params",
             "returns",

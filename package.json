@@ -38,6 +38,10 @@
             {
                 "command": "lukeLinter.initProjectConfig",
                 "title": "Luke Linter: Initialize Project Configuration"
+            },
+            {
+                "command": "lukeLinter.addMasterFormula",
+                "title": "Luke Linter: Add Master Formula to All Functions"
             }
         ],
         "configuration": {

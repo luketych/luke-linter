@@ -123,7 +123,7 @@ async function analyzeDiagnostics(document) {
         // If no first comment block found, add diagnostic for missing file properties
         diagnostics.push(new vscode.Diagnostic(
             new vscode.Range(0, 0, 0, 0),
-            'Missing file-level properties block',
+            'Missing file-level properties block (including masterFormula)',
             vscode.DiagnosticSeverity.Error
         ));
     }
@@ -134,11 +134,7 @@ async function analyzeDiagnostics(document) {
         if (func.commentBlock) {
             // Only validate properties found in this specific comment block
             const functionProperties = linter.parseProperties(func.commentBlock);
-
-            // Create a new instance of PropertyLinter for this function to ensure clean validation
-            const functionLinter = new PropertyLinter();
-            await functionLinter.loadProjectConfig(document.fileName);
-            const functionDiagnostics = functionLinter.validateProperties(functionProperties, 'function');
+            const functionDiagnostics = linter.validateProperties(functionProperties, 'function');
 
             // Adjust diagnostic ranges to point to the actual location in the comment
             const commentStart = text.indexOf(func.commentBlock);
@@ -154,7 +150,7 @@ async function analyzeDiagnostics(document) {
             const funcPos = document.positionAt(func.start);
             diagnostics.push(new vscode.Diagnostic(
                 new vscode.Range(funcPos, funcPos),
-                `Missing property block for function "${func.name}"`,
+                `Missing property block for function "${func.name}" (including masterFormula)`,
                 vscode.DiagnosticSeverity.Error
             ));
         }
@@ -196,6 +192,14 @@ async function checkWorkspace() {
 }
 
 /**
+ * Add master formula to text
+ * @returns {string} The master formula text
+ */
+function getMasterFormula() {
+    return `▽ = ⨍(⏵▷, τ𝑡, ⌬ⵣ, ↯〰⥂⥮, ☀♬⨳❄, eℰ∈∃, ⍨☯, Ψ?⍰⸮, ℳ⚖)`;
+}
+
+/**
  * Add file-level property template at cursor position
  * @param {vscode.TextEditor} editor 
  */
@@ -205,6 +209,7 @@ async function addFileProperties(editor) {
     }
 
     const template = `/*
+${getMasterFormula()}
 [[OPEN:author]]
 Your Name
 [[CLOSE:author]]
@@ -231,6 +236,7 @@ async function addFunctionProperties(editor) {
     }
 
     const template = `/*
+${getMasterFormula()}
 [[OPEN:description]]
 Description of what this function does
 [[CLOSE:description]]
@@ -253,6 +259,54 @@ Usage example
     await editor.edit(editBuilder => {
         editBuilder.insert(editor.selection.start, template);
     });
+}
+
+/**
+ * Add master formula to all functions and files in the document
+ * @param {vscode.TextEditor} editor 
+ */
+async function addMasterFormula(editor) {
+    if (!editor) {
+        return;
+    }
+
+    const document = editor.document;
+    const text = document.getText();
+    const linter = new PropertyLinter();
+    const functions = linter.findFunctions(text);
+    const edits = new vscode.WorkspaceEdit();
+    const formula = getMasterFormula();
+
+    // Add to file header if it doesn't have one
+    const firstComment = linter.getFirstComment(text);
+    if (!firstComment) {
+        // No comment block exists, create a new one
+        const position = new vscode.Position(0, 0);
+        edits.insert(document.uri, position, `/*\n${formula}\n*/\n\n`);
+    } else if (!firstComment.includes('masterFormula') && !firstComment.includes(formula)) {
+        // Comment block exists but no master formula, add it at the start of the block
+        const commentStart = document.positionAt(text.indexOf(firstComment));
+        const insertPos = commentStart.translate(1, 0); // After the /* line
+        edits.insert(document.uri, insertPos, formula + '\n\n');
+    }
+
+    // Add to each function if it doesn't have one
+    for (const func of functions) {
+        if (func.commentBlock && !func.commentBlock.includes('masterFormula') && !func.commentBlock.includes(formula)) {
+            // If function has a comment block but no master formula, add it at the start
+            const commentStart = document.positionAt(text.indexOf(func.commentBlock));
+            const insertPos = commentStart.translate(1, 0); // After the /* line
+            edits.insert(document.uri, insertPos, formula + '\n\n');
+        } else if (!func.commentBlock) {
+            // If function has no comment block, add a new one with master formula
+            const funcStart = document.positionAt(func.start);
+            edits.insert(document.uri, funcStart, `/*\n${formula}\n*/\n\n`);
+        }
+    }
+
+    // Apply all edits
+    await vscode.workspace.applyEdit(edits);
+    vscode.window.showInformationMessage('Master formula added to all functions and file header');
 }
 
 /**
@@ -396,6 +450,12 @@ function activate(context) {
     // Register the new command
     context.subscriptions.push(
         vscode.commands.registerCommand('lukeLinter.initProjectConfig', initProjectConfig)
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('lukeLinter.addMasterFormula', () => {
+            addMasterFormula(vscode.window.activeTextEditor);
+        })
     );
 
     // Analyze all open documents
